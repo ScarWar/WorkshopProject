@@ -1,9 +1,5 @@
 import sys
-import os, os.path
-import subprocess
-import shutil
-import datetime
-import random
+import os
 import numpy as np
 
 ant_trace = 1
@@ -24,7 +20,7 @@ def freeze(density):
 
 def create_boarders(pher_mat):
     """Create boarders for the pheromone matrix, this will ensure that
-    the ant won't go outside the valide move space"""
+    the ant won't go outside the valid move space"""
     pher_mat[0, :, :] = pher_mat[-1, :, :] = 0
     pher_mat[:, 0, :] = pher_mat[:, -1, :] = 0
     pher_mat[:, :, 0] = pher_mat[:, :, -1] = 0
@@ -32,7 +28,7 @@ def create_boarders(pher_mat):
 
 
 def update(pher_mat, ants):
-    """Simulate move off all ants and calculate new pheromone network"""
+    """Simulate move of all ants and calculate new pheromone network"""
     for ant in ants:
         ant.move(pher_mat)
 
@@ -48,7 +44,7 @@ def update(pher_mat, ants):
 
 
 def init_pheromone_mat(shape):
-    """Initlize pheromone network, with dimensions specified by shape, shape must be tuple"""
+    """Initialize pheromone network, with dimensions specified by shape, shape must be tuple"""
     pher_mat = np.empty(shape)
     pher_mat[:, :, :] = min_pheromone
 
@@ -56,7 +52,7 @@ def init_pheromone_mat(shape):
 
 
 def create_ants(n, start_point, end_point, mat, path_length, start_id):
-    """Initlize n new ants"""
+    """Initialize n new ants"""
     ants = []
     for i in range(n):
         ant = Ant(mat, start_id + i, path_length, start_point, end_point)
@@ -66,7 +62,7 @@ def create_ants(n, start_point, end_point, mat, path_length, start_id):
 
 
 def create_distribution(current, mat):
-    """Create new distribution over the avaliable moves for the current position
+    """Create new distribution over the available moves for the current position
     according to the pheromone network"""
     p = np.ndarray(shape=[6])
     move_space = []
@@ -99,6 +95,9 @@ class Ant:
     """This class implements ant agents for Ant colony optimization"""
 
     def __init__(self, mat, id_num, path_length, start_point, end_point):
+        # TODO I think {mat} should not be an attribute but rather be passed
+        # as an argument to functions using it. This can reduce memory use
+        # and make the code more clear, this is not a private property of the ant.
         self.mat = mat
         self.id = id_num
         self.path = [start_point]
@@ -117,6 +116,20 @@ class Ant:
         ant_info += "Current path is: " + path_to_string(self) + '\n'
         return ant_info
 
+    def __repr__(self):
+        ant_repr  = "Ant([\n"
+        ant_repr += " Mat=" + repr(self.mat) + '\n'
+        ant_repr += " Id=" + repr(self.id) + '\n'
+        ant_repr += " Path=" + repr(self.path) + '\n'
+        ant_repr += " Current point=" + repr(self.current) + '\n'
+        ant_repr += " Score=" + repr(self.score) + '\n'
+        ant_repr += " Timeout=" + repr(self.timeout) + '\n'
+        ant_repr += " Alive=" + repr(self.alive) + '\n'
+        ant_repr += " Time to live=" + repr(self.ttl) + '\n'
+        ant_repr += " End point=" + repr(self.end_point) + '\n'
+        ant_repr += "])"
+        return ant_repr
+
     def get_path_length(self):
         """Return the length of the current path found by the ant"""
         return len(self.path) - 1
@@ -127,15 +140,15 @@ class Ant:
         if not self.alive:
             return
 
-        # Check if the ant is not forzen
+        # Check if the ant is not frozen
         if self.timeout == 0:
 
-            # Create distrubution over the valid moves
+            # Create distribution over the valid moves
             move_space, p = create_distribution(self.current, pheromone_mat)
-            trys = number_of_tries
-            while trys > 0:
+            tries = number_of_tries
+            while tries > 0:
 
-                # Choose next move according to the destribution p
+                # Choose next move according to the distribution p
                 next_move = move_space[np.random.choice(6, p=p)]
 
                 # Check for loops in the path, if loop not found, append new move
@@ -146,7 +159,7 @@ class Ant:
                     self.ttl -= 1
                     break
 
-                trys -= 1
+                tries -= 1
 
             # Calculate the freeze time for the ant
             self.timeout = freeze(self.mat[self.current])
@@ -154,12 +167,13 @@ class Ant:
             # Check ant got to destination
             if self.current == self.end_point and self.ttl == 0:
                 print(self)
+                print(repr(self))
             # return # TODO uncomment this maybe
             # os.system("echo " + ant_info + " >> " + output_param)
             # print(ant_info)
 
             # Kill ant if no new move selected or no new move is possiable
-            if trys == 0 or self.ttl == 0:
+            if tries == 0 or self.ttl == 0:
                 self.alive = False
                 return
         else:
