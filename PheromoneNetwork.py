@@ -37,7 +37,8 @@ class PheromoneNetwork(object):
         # Apply pheromone decay and pheromone lower threshold
         self.net *= self.decay
         # Fix the pheromone network
-        self.net[(self.net > 0) * (self.net < self.min_value)] = self.min_value
+        self.net[(self.net < self.min_value)] = self.min_value
+        self.net = create_boarders(self.net)
 
     def __str__(self):
         return 'Decay : ' + str(self.decay) + '\n' + 'Net :\n' + str(self.net)

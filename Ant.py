@@ -1,7 +1,8 @@
 import numpy as np
 from numpy import random as rnd
-import PheromoneNetwork as pNet
+
 import matplotlib.pyplot as plt
+import PheromoneNetwork as pNet
 
 # change system TODO
 
