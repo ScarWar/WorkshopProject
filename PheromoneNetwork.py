@@ -10,6 +10,11 @@ def create_boarders(pher_net):
     pher_net[0, :, :] = pher_net[-1, :, :] = 0
     pher_net[:, 0, :] = pher_net[:, -1, :] = 0
     pher_net[:, :, 0] = pher_net[:, :, -1] = 0
+
+    for helix in pher_net.helicis:
+        for voxel in helix:
+            pher_net[voxel] = 0
+
     return pher_net
 
 
@@ -19,20 +24,33 @@ class PheromoneNetwork(object):
     which simulates ant pheromone
     """
 
-    def __init__(self, shape, decay=0.9, min_value=1):
+    def __init__(self, shape, helicis, decay=0.9, min_value=1):
         # Inialize pheromone network
         self.net = np.empty(shape)
         self.net[:, :, :] = min_value
         self.net = create_boarders(self.net)
 
+        # Set helicis in map
+        self.helicis = helicis
+
         # set constants
         self.decay = decay
         self.min_value = min_value
 
-    def __call__(self, ants):
+    def __call__(self, ants, side_effect=0.2):
         # Add pheromone trace by ants current position
+        sides = [(-1, 0, 0), (1, 0, 0),
+                 (0, -1, 0), (0, 1, 0),
+                 (0, 0, -1), (0, 0, 1)]
+
         for ant in ants:
-            self.net[ant.current] += ant.pheromone_trace
+            # Check if ant found path
+            if ant.current == ant.end_point:  # and ant.ttl == 0:
+                # TODO Does any path is good?
+                # or just if the ant is with ttl = 0?
+                self.net[ant.current] += ant.pheromone_trace
+                for side in sides:
+                    self.net[ant.current] += ant.pheromone_trace * side_effect
 
         # Apply pheromone decay and pheromone lower threshold
         self.net *= self.decay

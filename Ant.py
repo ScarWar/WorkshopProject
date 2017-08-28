@@ -1,7 +1,6 @@
 import numpy as np
 from numpy import random as rnd
 
-import matplotlib.pyplot as plt
 import PheromoneNetwork as pNet
 
 # change system TODO
@@ -12,7 +11,7 @@ def freeze(density):
     Calculate the time for the ant to wait, this simulates
     road/arc length
     """
-    return int(min(1 / density, 100))
+    return int(min(1 / density, 5))
 
 
 def create_boarders(pher_mat):
@@ -131,9 +130,9 @@ class Ant(object):
             self.timeout = freeze(mat[self.current])
 
             # Check ant got to destination
-            if self.current == self.end_point and self.ttl == 0:
-                # print(repr(self))
-                print(self)
+            if self.current == self.end_point:
+                self.alive = False
+                print(self)  # Debuging
 
             # Kill ant if no new move selected or no new move is possiable
             if tries == 0 or self.ttl == 0:
@@ -143,20 +142,19 @@ class Ant(object):
             # Decrease freeze time
             self.timeout -= 1
 
-    # def plot(self):
-    #     x = max(self.path, lambda v: v[0])[0]
-    #     y = max(self.path, lambda v: v[1])[1]
-    #     z = max(self.path, lambda v: v[2])[2]
-
 
 def main():
     """Test unit for Ant and PheromoneNetwork classes"""
-    row = [i/10.0 for i in range(10)]
+
+    # TODO add new code, origin shift and anything new
+
+    row = [i / 10.0 for i in range(10)]
     layer = [list(row)] * 5
     cryo_em = [list(layer)] * 5
 
     mat = np.array(cryo_em)
 
+    helicis = None  # TODO code for map
     start_point = (1, 1, 1)
     end_point = (3, 3, 3)
     path_length = 8
@@ -167,7 +165,7 @@ def main():
     moves = 30
 
     pher_net = pNet.PheromoneNetwork(
-        [len(mat), len(mat[0]), len(mat[0][0])])
+        [len(mat), len(mat[0]), len(mat[0][0])], helicis)
 
     print(pher_net)
 
@@ -181,8 +179,11 @@ def main():
             pher_net(ants)
 
     print(pher_net)
+
+    best = max(get_valid_solutions(ants), key=lambda ant: ant.score).path
     print("Best path found:\n" +
           str(max(get_valid_solutions(ants), key=lambda ant: ant.score)))
+    print(best)
 
 
 if __name__ == '__main__':
